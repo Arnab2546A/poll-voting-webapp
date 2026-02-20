@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function PollCard({ poll, hasVoted = false }) {
+export default function PollCard({ poll, hasVoted = false, onDeleted }) {
   const navigate = useNavigate();
   const [creatorName, setCreatorName] = useState("");
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchCreator = async () => {
@@ -22,6 +24,42 @@ export default function PollCard({ poll, hasVoted = false }) {
     };
     fetchCreator();
   }, [poll.created_by]);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      // Added: check the logged-in user to show owner-only delete action
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      setCurrentUserId(user?.id || null);
+    };
+
+    void fetchCurrentUser();
+  }, []);
+
+  const handleDelete = async () => {
+    if (!currentUserId || currentUserId !== poll.created_by) return;
+
+    // Added: guard to avoid accidental deletes
+    const confirmed = window.confirm("Delete this poll? This cannot be undone.");
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+
+    const { error } = await supabase
+      .from("polls")
+      .delete()
+      .eq("id", poll.id)
+      .eq("created_by", currentUserId);
+
+    setIsDeleting(false);
+
+    if (!error) {
+      // Added: notify parent to remove card from list
+      onDeleted?.(poll.id);
+    }
+  };
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "";
@@ -42,9 +80,21 @@ export default function PollCard({ poll, hasVoted = false }) {
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 mb-4 border border-gray-100 hover:border-blue-200 group">
       <div className="flex flex-col h-full">
         <div className="flex items-start justify-between gap-3 mb-4">
-          <h3 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">
-            {poll.question}
-          </h3>
+          <div className="flex items-start justify-between gap-3 w-full">
+            <h3 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">
+              {poll.question}
+            </h3>
+            {currentUserId === poll.created_by && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="text-xs font-semibold text-red-600 border border-red-200 px-2 py-1 rounded-full hover:bg-red-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            )}
+          </div>
           {hasVoted && (
             <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 border border-green-300 px-2 py-1 rounded-full whitespace-nowrap">
               ✓ Voted

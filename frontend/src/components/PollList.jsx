@@ -45,6 +45,12 @@ export default function PollList() {
     fetchPolls();
   }, []);
 
+  const handlePollDeleted = (deletedId) => {
+    // Added: remove deleted poll without refetching the whole list
+    setPolls((prevPolls) => prevPolls.filter((poll) => poll.id !== deletedId));
+    setVotedPollIds((prevIds) => prevIds.filter((pollId) => pollId !== deletedId));
+  };
+
   if (loading) return <p>Loading polls...</p>;
 
   return (
@@ -53,7 +59,12 @@ export default function PollList() {
         <p>No polls available</p>
       ) : (
         polls.map((poll) => (
-          <PollCard key={poll.id} poll={poll} hasVoted={votedPollIds.includes(poll.id)} />
+          <PollCard
+            key={poll.id}
+            poll={poll}
+            hasVoted={votedPollIds.includes(poll.id)}
+            onDeleted={handlePollDeleted}
+          />
         ))
       )}
     </div>

@@ -1,6 +1,30 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
+import Result from "../components/Result";
+
+const buildResults = (voteRows, optionRows) => {
+  const voteCountMap = (voteRows || []).reduce((accumulator, vote) => {
+    accumulator[vote.option_id] = (accumulator[vote.option_id] || 0) + 1;
+    return accumulator;
+  }, {});
+
+  return (optionRows || []).map((option) => ({
+    id: option.id,
+    option_text: option.option_text,
+    count: voteCountMap[option.id] || 0,
+  }));
+};
+
+const fetchVoteRows = async (pollId) => {
+  const { data, error } = await supabase
+    .from("votes")
+    .select("option_id")
+    .eq("poll_id", pollId);
+
+  if (error) return null;
+  return data || [];
+};
 
 export default function PollDetail() {
   const navigate = useNavigate();
@@ -15,28 +39,25 @@ export default function PollDetail() {
   const [hasVoted, setHasVoted] = useState(false);
   const [isVoteStatusLoading, setIsVoteStatusLoading] = useState(true);
 
+  const resetPollViewState = () => {
+    setIsVoteStatusLoading(true);
+    setHasVoted(false);
+    setShowResults(false);
+    setResults([]);
+    setSelected(null);
+    setMessage("");
+  };
+
   useEffect(() => {
     const fetchPoll = async () => {
-      setIsVoteStatusLoading(true);
-      setHasVoted(false);
-      setShowResults(false);
-      setResults([]);
-      setSelected(null);
-      setMessage("");
+      resetPollViewState();
 
-      const { data: pollData } = await supabase
-        .from("polls")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const [{ data: pollData }, { data: optionData }] = await Promise.all([
+        supabase.from("polls").select("*").eq("id", id).single(),
+        supabase.from("options").select("*").eq("poll_id", id),
+      ]);
 
       setPoll(pollData);
-
-      const { data: optionData } = await supabase
-        .from("options")
-        .select("*")
-        .eq("poll_id", id);
-
       setOptions(optionData || []);
 
       const {
@@ -55,24 +76,10 @@ export default function PollDetail() {
           setHasVoted(true);
           setShowResults(true);
 
-          const { data: votesData, error: votesError } = await supabase
-            .from("votes")
-            .select("option_id")
-            .eq("poll_id", id);
+          const voteRows = await fetchVoteRows(id);
 
-          if (!votesError) {
-            const voteCountMap = (votesData || []).reduce((accumulator, vote) => {
-              accumulator[vote.option_id] = (accumulator[vote.option_id] || 0) + 1;
-              return accumulator;
-            }, {});
-
-            const mergedResults = (optionData || []).map((option) => ({
-              id: option.id,
-              option_text: option.option_text,
-              count: voteCountMap[option.id] || 0,
-            }));
-
-            setResults(mergedResults);
+          if (voteRows) {
+            setResults(buildResults(voteRows, optionData));
           }
         }
       }
@@ -80,33 +87,15 @@ export default function PollDetail() {
       setIsVoteStatusLoading(false);
     };
 
-    const timeoutId = setTimeout(() => {
-      void fetchPoll();
-    }, 0);
-
-    return () => clearTimeout(timeoutId);
+    void fetchPoll();
   }, [id]);
 
   const fetchResults = async () => {
-    const { data: votesData, error } = await supabase
-      .from("votes")
-      .select("option_id")
-      .eq("poll_id", id);
+    const voteRows = await fetchVoteRows(id);
 
-    if (error) return;
+    if (!voteRows) return;
 
-    const voteCountMap = (votesData || []).reduce((accumulator, vote) => {
-      accumulator[vote.option_id] = (accumulator[vote.option_id] || 0) + 1;
-      return accumulator;
-    }, {});
-
-    const mergedResults = options.map((option) => ({
-      id: option.id,
-      option_text: option.option_text,
-      count: voteCountMap[option.id] || 0,
-    }));
-
-    setResults(mergedResults);
+    setResults(buildResults(voteRows, options));
   };
 
   const handleVote = async () => {
@@ -201,19 +190,7 @@ export default function PollDetail() {
               </button>
             </>
           ) : (
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Results</h3>
-              {hasVoted && (
-                <p className="text-sm text-green-700 font-medium mb-3">✓ You have already submitted this poll.</p>
-              )}
-              <div className="space-y-2">
-                {results.map((result) => (
-                  <p key={result.id} className="text-gray-700 text-lg">
-                    {result.option_text} — {result.count} {result.count === 1 ? "vote" : "votes"}
-                  </p>
-                ))}
-              </div>
-            </div>
+            <Result hasVoted={hasVoted} results={results} />
           )}
 
           <button
