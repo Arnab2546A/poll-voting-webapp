@@ -1,36 +1,112 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
 export default function PollDetail() {
+  const navigate = useNavigate();
   const { id } = useParams();
 
   const [poll, setPoll] = useState(null);
   const [options, setOptions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [message, setMessage] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const [results, setResults] = useState([]);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [isVoteStatusLoading, setIsVoteStatusLoading] = useState(true);
 
   useEffect(() => {
-    fetchPoll();
-  }, []);
+    const fetchPoll = async () => {
+      setIsVoteStatusLoading(true);
+      setHasVoted(false);
+      setShowResults(false);
+      setResults([]);
+      setSelected(null);
+      setMessage("");
 
-  const fetchPoll = async () => {
-    // Fetch poll
-    const { data: pollData } = await supabase
-      .from("polls")
-      .select("*")
-      .eq("id", id)
-      .single();
+      const { data: pollData } = await supabase
+        .from("polls")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-    setPoll(pollData);
+      setPoll(pollData);
 
-    // Fetch options
-    const { data: optionData } = await supabase
-      .from("options")
-      .select("*")
+      const { data: optionData } = await supabase
+        .from("options")
+        .select("*")
+        .eq("poll_id", id);
+
+      setOptions(optionData || []);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { data: existingVote } = await supabase
+          .from("votes")
+          .select("id")
+          .eq("poll_id", id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (existingVote) {
+          setHasVoted(true);
+          setShowResults(true);
+
+          const { data: votesData, error: votesError } = await supabase
+            .from("votes")
+            .select("option_id")
+            .eq("poll_id", id);
+
+          if (!votesError) {
+            const voteCountMap = (votesData || []).reduce((accumulator, vote) => {
+              accumulator[vote.option_id] = (accumulator[vote.option_id] || 0) + 1;
+              return accumulator;
+            }, {});
+
+            const mergedResults = (optionData || []).map((option) => ({
+              id: option.id,
+              option_text: option.option_text,
+              count: voteCountMap[option.id] || 0,
+            }));
+
+            setResults(mergedResults);
+          }
+        }
+      }
+
+      setIsVoteStatusLoading(false);
+    };
+
+    const timeoutId = setTimeout(() => {
+      void fetchPoll();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [id]);
+
+  const fetchResults = async () => {
+    const { data: votesData, error } = await supabase
+      .from("votes")
+      .select("option_id")
       .eq("poll_id", id);
 
-    setOptions(optionData);
+    if (error) return;
+
+    const voteCountMap = (votesData || []).reduce((accumulator, vote) => {
+      accumulator[vote.option_id] = (accumulator[vote.option_id] || 0) + 1;
+      return accumulator;
+    }, {});
+
+    const mergedResults = options.map((option) => ({
+      id: option.id,
+      option_text: option.option_text,
+      count: voteCountMap[option.id] || 0,
+    }));
+
+    setResults(mergedResults);
   };
 
   const handleVote = async () => {
@@ -53,12 +129,19 @@ export default function PollDetail() {
 
     if (error) {
       setMessage("You have already voted in this poll.");
+      setHasVoted(true);
+      setShowResults(true);
+      await fetchResults();
     } else {
       setMessage("Vote submitted successfully!");
+      setHasVoted(true);
+      setShowResults(true);
+      setSelected(null);
+      await fetchResults();
     }
   };
 
-  if (!poll) {
+  if (!poll || isVoteStatusLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50">
         <div className="text-center">
@@ -83,36 +166,61 @@ export default function PollDetail() {
             <div className="h-1 w-20 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full"></div>
           </div>
 
-          {/* Options */}
-          <div className="space-y-3 mb-8">
-            {options.map((option) => (
-              <label
-                key={option.id}
-                className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                  selected === option.id
-                    ? "border-blue-500 bg-blue-50 shadow-md"
-                    : "border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-gray-100"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="option"
-                  value={option.id}
-                  onChange={() => setSelected(option.id)}
-                  className="w-5 h-5 text-blue-600 cursor-pointer accent-blue-600"
-                />
-                <span className="ml-4 text-gray-700 font-medium text-lg">{option.option_text}</span>
-              </label>
-            ))}
-          </div>
+          {!showResults ? (
+            <>
+              {/* Options */}
+              <div className="space-y-3 mb-8">
+                {options.map((option) => (
+                  <label
+                    key={option.id}
+                    className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                      selected === option.id
+                        ? "border-blue-500 bg-blue-50 shadow-md"
+                        : "border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="option"
+                      value={option.id}
+                      onChange={() => setSelected(option.id)}
+                      className="w-5 h-5 text-blue-600 cursor-pointer accent-blue-600"
+                    />
+                    <span className="ml-4 text-gray-700 font-medium text-lg">{option.option_text}</span>
+                  </label>
+                ))}
+              </div>
 
-          {/* Submit Button */}
+              {/* Submit Button */}
+              <button
+                onClick={handleVote}
+                disabled={!selected}
+                className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-blue-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                Submit Vote
+              </button>
+            </>
+          ) : (
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Results</h3>
+              {hasVoted && (
+                <p className="text-sm text-green-700 font-medium mb-3">✓ You have already submitted this poll.</p>
+              )}
+              <div className="space-y-2">
+                {results.map((result) => (
+                  <p key={result.id} className="text-gray-700 text-lg">
+                    {result.option_text} — {result.count} {result.count === 1 ? "vote" : "votes"}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
           <button
-            onClick={handleVote}
-            disabled={!selected}
-            className="w-full py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-xl hover:from-blue-600 hover:to-blue-700 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            onClick={() => navigate("/")}
+            className="w-full mt-4 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200"
           >
-            Submit Vote
+            Back to Home
           </button>
 
           {/* Message */}

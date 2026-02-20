@@ -4,6 +4,7 @@ import PollCard from "./PollCard";
 
 export default function PollList() {
   const [polls, setPolls] = useState([]);
+  const [votedPollIds, setVotedPollIds] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchPolls = async () => {
@@ -19,6 +20,23 @@ export default function PollList() {
     }
 
     setPolls(data);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: votesData, error: votesError } = await supabase
+        .from("votes")
+        .select("poll_id")
+        .eq("user_id", user.id);
+
+      if (!votesError) {
+        const ids = (votesData || []).map((vote) => vote.poll_id);
+        setVotedPollIds(ids);
+      }
+    }
+
     setLoading(false);
   };
 
@@ -35,7 +53,7 @@ export default function PollList() {
         <p>No polls available</p>
       ) : (
         polls.map((poll) => (
-          <PollCard key={poll.id} poll={poll} />
+          <PollCard key={poll.id} poll={poll} hasVoted={votedPollIds.includes(poll.id)} />
         ))
       )}
     </div>

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function PollCard({ poll }) {
+export default function PollCard({ poll, hasVoted = false }) {
   const navigate = useNavigate();
   const [creatorName, setCreatorName] = useState("");
 
@@ -41,16 +41,23 @@ export default function PollCard({ poll }) {
   return (
     <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 mb-4 border border-gray-100 hover:border-blue-200 group">
       <div className="flex flex-col h-full">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4 group-hover:text-blue-600 transition-colors duration-200">
-          {poll.question}
-        </h3>
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors duration-200">
+            {poll.question}
+          </h3>
+          {hasVoted && (
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 border border-green-300 px-2 py-1 rounded-full whitespace-nowrap">
+              ✓ Voted
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-100">
           <button
             onClick={() => navigate(`/poll/${poll.id}`)}
             className="px-5 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            View & Vote
+            {hasVoted ? "View Results" : "View & Vote"}
           </button>
 
           <div className="text-right">
