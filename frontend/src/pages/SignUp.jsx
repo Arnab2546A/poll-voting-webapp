@@ -183,17 +183,17 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-white to-emerald-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+    <div className="app-shell min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-md animate-float-in">
+        <div className="glass-surface surface-3d tilt-3d rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8 border border-white/70">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h2>
-            <p className="text-gray-500">Join us and start creating polls</p>
+            <h2 className="section-title text-3xl font-extrabold text-slate-800 mb-2">Create Account</h2>
+            <p className="text-slate-600 text-sm sm:text-base">Join us and start creating polls</p>
           </div>
 
           <form onSubmit={handleSignup} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
               <div className="relative">
                 <input
                   type="text"
@@ -202,7 +202,7 @@ export default function Signup() {
                   minLength={3}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className={`w-full px-4 py-3 pr-10 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 placeholder-gray-400 ${
+                  className={`w-full px-4 py-3 pr-10 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 placeholder-slate-400 bg-white/90 ${
                     usernameAvailable === false
                       ? "border-red-500 focus:ring-red-500"
                       : usernameAvailable === true
@@ -242,7 +242,7 @@ export default function Signup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
               <div className="relative">
                 <input
                   type="email"
@@ -250,7 +250,7 @@ export default function Signup() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`w-full px-4 py-3 pr-10 border rounded-lg focus:outline-none focus:ring-2 transition-all duration-200 placeholder-gray-400 ${
+                  className={`w-full px-4 py-3 pr-10 border rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 placeholder-slate-400 bg-white/90 ${
                     emailAvailable === false
                       ? "border-red-500 focus:ring-red-500"
                       : emailAvailable === true
@@ -290,21 +290,21 @@ export default function Signup() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
               <input
                 type="password"
                 placeholder="Enter password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 placeholder-gray-400"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 placeholder-slate-400 bg-white/90"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || usernameChecking || emailChecking || usernameAvailable === false || emailAvailable === false || username.length < 3}
-              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-700 transform hover:scale-[1.02] transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="btn-3d w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -323,7 +323,7 @@ export default function Signup() {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{" "}
-              <Link to="/login" className="text-green-600 hover:text-green-700 font-medium hover:underline transition-colors">
+              <Link to="/login" className="text-green-700 hover:text-green-800 font-semibold hover:underline transition-colors">
                 Login
               </Link>
             </p>

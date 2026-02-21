@@ -1,4 +1,4 @@
-export default function Result({ hasVoted, results }) {
+export default function Result({ hasVoted, results, userVotedOptionId }) {
 	const totalVotes = results.reduce((sum, result) => sum + result.count, 0);
 
 	return (
@@ -18,9 +18,18 @@ export default function Result({ hasVoted, results }) {
 
 			<div className="space-y-4">
 				{results.map((result) => (
-					<div key={result.id} className="rounded-xl border border-gray-100 bg-white p-4">
-						<div className="mb-2 flex items-center justify-between gap-4">
+				<div key={result.id} className={`rounded-xl border p-4 ${
+					userVotedOptionId === result.id
+						? "border-green-300 bg-green-50"
+						: "border-gray-100 bg-white"
+				}`}>
+					<div className="mb-2 flex items-center justify-between gap-4">
+						<div className="flex items-center gap-2">
+							{userVotedOptionId === result.id && (
+								<span className="text-green-600 font-bold text-lg">✓</span>
+							)}
 							<p className="text-base font-semibold text-gray-800">{result.option_text}</p>
+						</div>
 							<p className="text-sm font-medium text-gray-600">
 								{result.count} {result.count === 1 ? "vote" : "votes"}
 							</p>
