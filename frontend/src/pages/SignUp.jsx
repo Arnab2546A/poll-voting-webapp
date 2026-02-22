@@ -183,21 +183,42 @@ export default function Signup() {
   };
 
   return (
-    <div className="app-shell min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md animate-float-in">
-        <div className="glass-surface surface-3d tilt-3d rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8 border border-white/70">
+    <div className="min-h-screen world-hero relative overflow-hidden flex items-center justify-center px-4 py-8">
+      <div className="hero-glow-orb hero-glow-orb--one" />
+      <div className="hero-glow-orb hero-glow-orb--two" />
+
+      <div className="absolute inset-0 pointer-events-none opacity-35">
+        <svg className="h-full w-full" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice">
+          <circle cx="150" cy="140" r="3" fill="#3b82f6" opacity="0.7" />
+          <circle cx="520" cy="120" r="2.5" fill="#06b6d4" opacity="0.65" />
+          <circle cx="940" cy="210" r="3" fill="#10b981" opacity="0.7" />
+          <circle cx="260" cy="720" r="2.5" fill="#0ea5e9" opacity="0.65" />
+          <circle cx="820" cy="700" r="3" fill="#34d399" opacity="0.7" />
+          <line x1="150" y1="140" x2="520" y2="120" stroke="#60a5fa" strokeWidth="1" opacity="0.3" className="connection-line" />
+          <line x1="520" y1="120" x2="940" y2="210" stroke="#22d3ee" strokeWidth="1" opacity="0.3" className="connection-line" />
+          <line x1="150" y1="140" x2="260" y2="720" stroke="#38bdf8" strokeWidth="1" opacity="0.25" className="connection-line" />
+          <line x1="260" y1="720" x2="820" y2="700" stroke="#10b981" strokeWidth="1" opacity="0.27" className="connection-line" />
+          <line x1="940" y1="210" x2="820" y2="700" stroke="#2dd4bf" strokeWidth="1" opacity="0.27" className="connection-line" />
+        </svg>
+      </div>
+
+      <div className="relative z-10 w-full max-w-md animate-float-in">
+        <div className="glass-surface surface-3d rounded-2xl sm:rounded-3xl shadow-xl p-6 sm:p-8 border border-white/70">
           <div className="text-center mb-8">
-            <h2 className="section-title text-3xl font-extrabold text-slate-800 mb-2">Create Account</h2>
-            <p className="text-slate-600 text-sm sm:text-base">Join us and start creating polls</p>
+            <span className="world-chip mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold text-blue-800">
+              🌍 Worldwide Community
+            </span>
+            <h2 className="section-title hero-gradient-title text-3xl font-extrabold mb-2">Create Account</h2>
+            <p className="text-slate-700 text-sm sm:text-base">Join people around the world sharing their opinions.</p>
           </div>
 
           <form onSubmit={handleSignup} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Enter username (min 3 characters)"
+                  placeholder="Enter your name (min 3 characters)"
                   required
                   minLength={3}
                   value={username}
@@ -206,8 +227,8 @@ export default function Signup() {
                     usernameAvailable === false
                       ? "border-red-500 focus:ring-red-500"
                       : usernameAvailable === true
-                      ? "border-green-500 focus:ring-green-500"
-                      : "border-gray-300 focus:ring-green-500"
+                      ? "border-emerald-500 focus:ring-emerald-500"
+                      : "border-blue-200 focus:ring-blue-500"
                   }`}
                 />
                 {usernameChecking && (
@@ -254,8 +275,8 @@ export default function Signup() {
                     emailAvailable === false
                       ? "border-red-500 focus:ring-red-500"
                       : emailAvailable === true
-                      ? "border-green-500 focus:ring-green-500"
-                      : "border-gray-300 focus:ring-green-500"
+                      ? "border-emerald-500 focus:ring-emerald-500"
+                      : "border-teal-200 focus:ring-teal-500"
                   }`}
                 />
                 {emailChecking && (
@@ -297,14 +318,14 @@ export default function Signup() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 placeholder-slate-400 bg-white/90"
+                className="w-full px-4 py-3 border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder-slate-400 bg-white/90"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || usernameChecking || emailChecking || usernameAvailable === false || emailAvailable === false || username.length < 3}
-              className="btn-3d w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-3d w-full py-3 bg-gradient-to-r from-blue-600 via-sky-500 to-teal-500 text-white font-semibold rounded-xl hover:from-blue-700 hover:via-sky-600 hover:to-teal-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -315,7 +336,7 @@ export default function Signup() {
                   Creating account...
                 </span>
               ) : (
-                "Sign Up"
+                "Join Community"
               )}
             </button>
           </form>
