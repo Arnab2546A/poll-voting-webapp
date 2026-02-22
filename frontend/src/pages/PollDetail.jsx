@@ -40,6 +40,7 @@ export default function PollDetail() {
   const [hasVoted, setHasVoted] = useState(false);
   const [isVoteStatusLoading, setIsVoteStatusLoading] = useState(true);
   const [userVotedOptionId, setUserVotedOptionId] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const resetPollViewState = () => {
     setIsVoteStatusLoading(true);
@@ -58,6 +59,12 @@ export default function PollDetail() {
 
     setResults(buildResults(voteRows, options));
   }, [id, options]);
+
+  const handleRefreshResults = useCallback(async () => {
+    setIsRefreshing(true);
+    await fetchResults();
+    setIsRefreshing(false);
+  }, [fetchResults]);
 
   useEffect(() => {
     const fetchPoll = async () => {
@@ -218,7 +225,13 @@ export default function PollDetail() {
             <>
               {/* Results Section */}
               <div className="animate-float-in" style={{ animationDelay: "0.05s" }}>
-                <Result hasVoted={hasVoted} results={results} userVotedOptionId={userVotedOptionId} />
+                <Result 
+                  hasVoted={hasVoted} 
+                  results={results} 
+                  userVotedOptionId={userVotedOptionId}
+                  onRefresh={handleRefreshResults}
+                  isRefreshing={isRefreshing}
+                />
               </div>
             </>
           )}

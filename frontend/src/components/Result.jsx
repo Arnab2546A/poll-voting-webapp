@@ -1,17 +1,32 @@
-export default function Result({ hasVoted, results, userVotedOptionId }) {
+export default function Result({ hasVoted, results, userVotedOptionId, onRefresh, isRefreshing }) {
 	const totalVotes = results.reduce((sum, result) => sum + result.count, 0);
 
 	return (
 		<div className="glass-surface surface-3d rounded-2xl p-6 sm:p-10">
 			{/* Header */}
 			<div className="mb-8">
-				<div className="flex items-center justify-between mb-4">
+				<div className="flex items-center justify-between mb-4 flex-wrap gap-4">
 					<h2 className="text-2xl sm:text-3xl font-bold text-slate-950">Live Results</h2>
-					<div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-teal-100 border border-blue-300">
-						<span className="text-2xl">🗳️</span>
-						<span className="font-bold text-blue-900 text-sm sm:text-base">
-							{totalVotes} {totalVotes === 1 ? "vote" : "votes"}
-						</span>
+					<div className="flex items-center gap-3">
+						<div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-teal-100 border border-blue-300">
+							<span className="text-2xl">🗳️</span>
+							<span className="font-bold text-blue-900 text-sm sm:text-base">
+								{totalVotes} {totalVotes === 1 ? "vote" : "votes"}
+							</span>
+						</div>
+						{onRefresh && (
+							<button
+								onClick={onRefresh}
+								disabled={isRefreshing}
+								className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 border border-emerald-300 hover:from-emerald-200 hover:to-teal-200 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+								title="Refresh results"
+							>
+								<span className={`text-lg ${isRefreshing ? 'animate-spin' : ''}`}>🔄</span>
+								<span className="font-bold text-emerald-900 text-sm sm:text-base hidden sm:inline">
+									{isRefreshing ? "Refreshing..." : "Refresh"}
+								</span>
+							</button>
+						)}
 					</div>
 				</div>
 				{hasVoted && (
